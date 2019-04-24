@@ -320,7 +320,65 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
+    if currentGameState.isWin():  return float("inf")
+    if currentGameState.isLose(): return float("-inf")
+    
+    # Fetch several data we require to analyze thecurrent state of the pacman's environment
+    pacmanPos = currentGameState.getPacmanPosition()
+    ghostStates = currentGameState.getGhostStates() 
+    foodPos = currentGameState.getFood()
+    capsules = currentGameState.getCapsules()
+
+    def manhattan(xy1, xy2):
+      """
+      Our lil' and old Manhattan taxi drive distance function
+      """
+      return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
+    manhattans_food = [ ( manhattan(pacmanPos, food) ) for food in foodPos.asList() ]
+    
+    # For each of the manhattan distances to a food, we take the one
+    # with the minimal distance possible
+    min_manhattans_food = min(manhattans_food)
+
+    manhattans_ghost = [ manhattan(pacmanPos, ghostState.getPosition()) for ghostState in ghostStates if ghostState.scaredTimer == 0 ]
+    min_manhattans_ghost = -3
+    # For each manhattan distance of a ghost, let's find the smalles distance possible.
+    # Why an initial negative value? If no ghost exists in this state, simply give a
+    # little price to Pacman for putting ghosts to rest.
+    if ( len(manhattans_ghost) > 0 ): 
+      min_manhattans_ghost = min(manhattans_ghost)
+
+    manhattans_ghost_scared = [ manhattan(pacmanPos, ghostState.getPosition()) for ghostState in ghostStates if ghostState.scaredTimer > 0 ]
+    min_manhattans_ghost_scared = 0;
+    # The same goes with the scared ghosts. Find the smallest distance possible for each possible scared ghost.
+    if ( len(manhattans_ghost_scared) > 0 ): 
+      min_manhattans_ghost_scared = min(manhattans_ghost_scared)
+
+    # Get the default score for the current state.
+    score = scoreEvaluationFunction(currentGameState)
+    
+    # The main objective of the pacman: THE PELLET. It has to be its utmost priority.
+    score += -1.5 * min_manhattans_food
+    
+    # Why the inverse of the lowest distance possible? Pretty obvious, we want to
+    # give the less points possible when a ghost is getting near the Pacman.
+    score += -2 * ( 1.0 / min_manhattans_ghost )
+    
+    # So for scared ghosts, we give them the same weight as the normal ghosts,
+    # though when we can eat them, they will be a pretty and tasty meal.
+    score += -2 * min_manhattans_ghost_scared
+    
+    # Why this massive weight compared to other factors? We want the Pacman to be
+    # focused on eating pellets, not capsules and then go for ghosts.
+    score += -20 * len(capsules)
+    
+    # For each non eaten pellet, diminish current state score. It is important to
+    # make the Pacman be enticed to go for pellets.
+    score += -4 * len(foodPos.asList())
+
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
