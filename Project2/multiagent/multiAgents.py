@@ -74,7 +74,31 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #return successorGameState.getScore()
+        food_left = sum(int(j) for i in newFood for j in i)
+
+        if food_left > 0:
+            food_distances = [manhattanDistance(newPos, (x, y))
+                              for x, row in enumerate(newFood)
+                              for y, food in enumerate(row)
+                              if food]
+            shortest_food = min(food_distances)
+        else:
+            shortest_food = 0
+
+        if newGhostStates:
+            ghost_distances = [manhattanDistance(ghost.getPosition(), newPos)
+                               for ghost in newGhostStates]
+            shortest_ghost = min(ghost_distances)
+
+            if shortest_ghost == 0:
+                shortest_ghost = -2000
+            else:
+                shortest_ghost = -10 / shortest_ghost
+        else:
+            shortest_ghost = 0
+
+        return -2 * shortest_food + shortest_ghost - 40 * food_left
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -129,7 +153,32 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        def search_depth(state, depth, agent):
+            if agent == state.getNumAgents():
+                if depth == self.depth:
+                    return self.evaluationFunction(state)
+                else:
+                    return search_depth(state, depth + 1, 0)
+            else:
+                actions = state.getLegalActions(agent)
+
+                if len(actions) == 0:
+                    return self.evaluationFunction(state)
+
+                next_states = (
+                    search_depth(state.generateSuccessor(agent, action),
+                    depth, agent + 1)
+                    for action in actions
+                    )
+
+                return (max if agent == 0 else min)(next_states)
+
+        return max(
+            gameState.getLegalActions(0),
+            key = lambda x: search_depth(gameState.generateSuccessor(0, x), 1, 1)
+            )
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -141,7 +190,62 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+
+        def min_val(state, depth, agent, alpha, beta):
+                if agent == state.getNumAgents():
+                    return max_val(state, depth + 1, 0, alpha, beta)
+
+                val = None
+                for action in state.getLegalActions(agent):
+                    successor = min_val(state.generateSuccessor(agent, action), depth, agent + 1, alpha, beta)
+                    val = successor if val is None else min(val, successor)
+
+                    if alpha is not None and val < alpha:
+                        return val
+
+                    beta = val if beta is None else min(beta, val)
+
+                if val is None:
+                    return self.evaluationFunction(state)
+
+                return val
+
+        def max_val(state, depth, agent, alpha, beta):
+            assert agent == 0
+
+            if depth > self.depth:
+                return self.evaluationFunction(state)
+
+            val = None
+            for action in state.getLegalActions(agent):
+                successor = min_val(state.generateSuccessor(agent, action), depth, agent + 1, alpha, beta)
+                val = max(val, successor)
+
+                if beta is not None and val > beta:
+                    return val
+
+                alpha = max(alpha, val)
+
+            if val is None:
+                return self.evaluationFunction(state)
+
+            return val
+
+        val, alpha, beta, best = None, None, None, None
+        for action in gameState.getLegalActions(0):
+            val = max(val, min_val(gameState.generateSuccessor(0, action), 1, 1, alpha, beta))
+            # if val >= beta: return action
+            if alpha is None:
+                alpha, best = val, action
+            else:
+                alpha, best = max(val, alpha), action if val > alpha else best
+
+        return best
+
+def average(lst):
+    lst = list(lst)
+    return sum(lst) / len(lst)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
