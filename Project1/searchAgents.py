@@ -536,10 +536,10 @@ class ClosestDotSearchAgent(SearchAgent):
 
         "*** YOUR CODE HERE ***"
         fringe = util.Queue()
-        visited = []        # List of already visited nodes
-        action_list = []    # List of actions taken to get to the current node
-        total_cost = 0      # Cost to get to the current node
-        initial = problem.getStartState()   # Starting state of the problem
+        visited = []
+        action_list = []
+        total_cost = 0
+        initial = problem.getStartState()
 
         fringe.push((initial, action_list))
 
