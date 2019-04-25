@@ -85,19 +85,28 @@ class ReflexAgent(Agent):
             shortest_food = min(food_distances)
         else:
             shortest_food = 0
+        #print("food left: ", food_left)
+        #print("food distances: ", shortest_food)
+        #
 
         if newGhostStates:
             ghost_distances = [manhattanDistance(ghost.getPosition(), newPos)
                                for ghost in newGhostStates]
             shortest_ghost = min(ghost_distances)
+            
 
             if shortest_ghost == 0:
-                shortest_ghost = -2000
+                shortest_ghost = -1000
             else:
-                shortest_ghost = -10 / shortest_ghost
+                shortest_ghost = -8 / shortest_ghost
+             
         else:
             shortest_ghost = 0
 
+        #print("food left: ", food_left)
+        #print("food distances: ", shortest_food)
+        #print("shortest ghost: ", shortest_ghost) 
+        
         return -2 * shortest_food + shortest_ghost - 40 * food_left
 
 def scoreEvaluationFunction(currentGameState):
@@ -272,7 +281,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 return expFinder(gameState, deepness, agent)
         
         def maxFinder(gameState, deepness, agent):
-            output = ["meow", -float("inf")]
+            output = [0, -float("inf")]
             pacActions = gameState.getLegalActions(agent)
             
             if not pacActions:
@@ -290,7 +299,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             return output
             
         def expFinder(gameState, deepness, agent):
-            output = ["meow", 0]
+            output = [0, 0]
             ghostActions = gameState.getLegalActions(agent)
             
             if not ghostActions:
